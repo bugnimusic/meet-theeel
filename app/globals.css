@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'IPAex Mincho';
+  src: url('/fonts/ipaexm.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --eel-primary: #6c3ce8;
+  --eel-secondary: #c084fc;
+  --eel-glow: rgba(100, 60, 230, 0.4);
+  --eel-glow-soft: rgba(100, 60, 230, 0.15);
+  --eel-dark: #0a0a0a;
+  --font-mincho: 'IPAex Mincho', 'Noto Serif CJK TC', 'Source Han Serif TC', serif;
+}
+
+body {
+  background: var(--eel-dark);
+  min-height: 100vh;
+}
+
+/* 中文內容用明朝體 */
+h1, h2, h3, p, span, blockquote {
+  font-family: var(--font-mincho);
+}
+
+.glow-text {
+  text-shadow: 0 0 20px var(--eel-glow), 0 0 40px var(--eel-glow-soft);
+}
+
+.glow-box {
+  box-shadow: 0 0 30px var(--eel-glow), 0 0 60px var(--eel-glow-soft);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #6c3ce8 0%, #a855f7 50%, #d8b4fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
