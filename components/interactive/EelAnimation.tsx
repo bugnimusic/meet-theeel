@@ -62,6 +62,63 @@ export default function EelAnimation() {
     const W = () => window.innerWidth;
     const H = () => window.innerHeight;
 
+    // 抓取系統（皮克敏風格）
+    let mouseX = 0, mouseY = 0;
+    let grabbedEelIdx = -1;
+    let grabOffsetX = 0, grabOffsetY = 0;
+    const eelGrabState: { grabbed: boolean; targetX: number; targetY: number; returnT: number }[] = [];
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      
+      // 找最近的鰻魚頭部
+      for (let i = 0; i < eels.length; i++) {
+        const pts = lastPoints[i];
+        if (!pts || pts.length === 0) continue;
+        // 檢查前 20% 的身體（不只是頭，身體也能抓）
+        const checkLen = Math.floor(pts.length * 0.3);
+        for (let j = 0; j < checkLen; j++) {
+          const dx = pts[j].x - mx;
+          const dy = pts[j].y - my;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < eels[i].maxWidth * 1.5) {
+            grabbedEelIdx = i;
+            grabOffsetX = dx;
+            grabOffsetY = dy;
+            eelGrabState[i] = { grabbed: true, targetX: mx, targetY: my, returnT: 0 };
+            canvas.style.cursor = "grabbing";
+            return;
+          }
+        }
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+      if (grabbedEelIdx >= 0) {
+        eelGrabState[grabbedEelIdx].targetX = mouseX;
+        eelGrabState[grabbedEelIdx].targetY = mouseY;
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (grabbedEelIdx >= 0) {
+        eelGrabState[grabbedEelIdx].grabbed = false;
+        eelGrabState[grabbedEelIdx].returnT = 0;
+        grabbedEelIdx = -1;
+        canvas.style.cursor = "default";
+      }
+    };
+
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseup", handleMouseUp);
+    canvas.addEventListener("mouseleave", handleMouseUp);
+
     const eels: EelConfig[] = [
       { speed: 0.5, amplitude: 60, frequency: 0.012, yOffset: 0.35, segments: 140, maxWidth: 28, opacity: 0.8, phase: 0, direction: 1 },
       { speed: 0.65, amplitude: 45, frequency: 0.015, yOffset: 0.55, segments: 110, maxWidth: 20, opacity: 0.6, phase: 2, direction: -1 },
@@ -70,20 +127,52 @@ export default function EelAnimation() {
       { speed: 1.1, amplitude: 25, frequency: 0.025, yOffset: 0.75, segments: 56, maxWidth: 8, opacity: 0.25, phase: 5.5, direction: 1 },
     ];
 
-    const getPoints = (w: number, h: number, eel: EelConfig, time: number) => {
+    // 儲存每條鰻魚的最新點（用於碰撞檢測）
+    const lastPoints: { x: number; y: number }[][] = eels.map(() => []);
+    // 初始化抓取狀態
+    for (let i = 0; i < eels.length; i++) {
+      if (!eelGrabState[i]) eelGrabState[i] = { grabbed: false, targetX: 0, targetY: 0, returnT: 1 };
+    }
+
+    const getPoints = (w: number, h: number, eel: EelConfig, time: number, eelIdx?: number) => {
       const { speed, amplitude, frequency, yOffset, segments, phase, direction } = eel;
       const centerY = h * yOffset;
       const totalLen = segments * 4;
-      const headX = direction > 0
+      let headX = direction > 0
         ? ((time * speed * 80 + phase * 200) % (w + totalLen)) - totalLen * 0.3
         : w + totalLen * 0.3 - ((time * speed * 80 + phase * 200) % (w + totalLen));
+      let headY = centerY;
 
+      // 如果被抓住，頭部跟著滑鼠
+      const gs = eelIdx !== undefined ? eelGrabState[eelIdx] : undefined;
+      if (gs && gs.grabbed) {
+        headX = gs.targetX + grabOffsetX;
+        headY = gs.targetY + grabOffsetY;
+      } else if (gs && !gs.grabbed && gs.returnT < 1) {
+        // 放開後平滑回歸
+        gs.returnT = Math.min(1, gs.returnT + 0.02);
+        const t = gs.returnT;
+        const ease = t * t * (3 - 2 * t); // smoothstep
+        headX = gs.targetX * (1 - ease) + headX * ease;
+        headY = gs.targetY * (1 - ease) + headY * ease;
+      }
+
+      const isGrabbed = gs && gs.grabbed;
       const points: { x: number; y: number }[] = [];
       for (let i = 0; i < segments; i++) {
         const t = i / segments;
         const x = headX - i * 4 * direction;
-        const waveAmp = amplitude * (0.2 + t * 0.8);
-        const y = centerY + Math.sin((x * frequency * direction) + (time * speed * 3) + phase) * waveAmp;
+        // 被抓住時：身體從滑鼠位置往下垂 + 瘋狂掙扎
+        let y: number;
+        if (isGrabbed) {
+          const struggle = Math.sin(time * 15 + i * 0.3) * amplitude * 0.6 * t;
+          const droop = t * t * 40; // 身體往下垂
+          y = headY + struggle + droop;
+        } else {
+          const baseY = (gs && gs.returnT < 1) ? headY : centerY;
+          const waveAmp = amplitude * (0.2 + t * 0.8);
+          y = baseY + Math.sin((x * frequency * direction) + (time * speed * 3) + phase) * waveAmp;
+        }
         points.push({ x, y });
       }
       return points;
@@ -206,7 +295,9 @@ export default function EelAnimation() {
 
     const drawEel = (ctx: CanvasRenderingContext2D, w: number, h: number, eel: EelConfig, time: number) => {
       const { maxWidth, opacity } = eel;
-      const points = getPoints(w, h, eel, time);
+      const eelIdx = eels.indexOf(eel);
+      const points = getPoints(w, h, eel, time, eelIdx);
+      lastPoints[eelIdx] = points;
       if (points.length < 2) return;
 
       // 產生泡泡和漣漪

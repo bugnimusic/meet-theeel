@@ -21,8 +21,8 @@ export default function Hero() {
         <EelAnimation />
       </motion.div>
 
-      {/* 主文字 */}
-      <div className="text-center z-10">
+      {/* 主文字（允許滑鼠穿透到鰻魚） */}
+      <div className="text-center z-10 pointer-events-none">
         <h1 className="text-6xl md:text-8xl font-thin tracking-widest mb-6">
           <TypeWriter
             text="Theeel"
