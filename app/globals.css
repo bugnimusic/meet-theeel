@@ -20,7 +20,15 @@
 body {
   background: var(--eel-dark);
   min-height: 100vh;
-  cursor: none;
+  cursor: none !important;
+}
+
+*, *::before, *::after {
+  cursor: none !important;
+}
+
+a, button, input, select, textarea {
+  cursor: none !important;
 }
 
 /* 中文內容用明朝體 */
