@@ -285,6 +285,55 @@ export default function EelAnimation() {
       const hNx = -hdy / hLen; // 法線（垂直於行進方向）
       const hNy = hdx / hLen;
 
+      // 蛇舌頭（粉紅色，快速甩動）
+      const tongueFlick = Math.sin(time * 12) * 0.4 + Math.sin(time * 8) * 0.2; // 快速甩
+      const tongueLen = maxWidth * 1.2;
+      const tongueBaseX = head.x + (hdx / hLen) * maxWidth * 0.4;
+      const tongueBaseY = head.y + (hdy / hLen) * maxWidth * 0.4;
+      const tongueTipX = tongueBaseX + (hdx / hLen) * tongueLen;
+      const tongueTipY = tongueBaseY + (hdy / hLen) * tongueLen;
+      // 分岔
+      const forkLen = tongueLen * 0.3;
+      const forkAngle = 0.35 + tongueFlick * 0.15;
+      const forkX1 = tongueTipX + Math.cos(Math.atan2(hdy, hdx) + forkAngle) * forkLen;
+      const forkY1 = tongueTipY + Math.sin(Math.atan2(hdy, hdx) + forkAngle) * forkLen;
+      const forkX2 = tongueTipX + Math.cos(Math.atan2(hdy, hdx) - forkAngle) * forkLen;
+      const forkY2 = tongueTipY + Math.sin(Math.atan2(hdy, hdx) - forkAngle) * forkLen;
+
+      // 舌身（帶甩動偏移）
+      const tongueSwayX = hNx * tongueFlick * maxWidth * 0.3;
+      const tongueSwayY = hNy * tongueFlick * maxWidth * 0.3;
+
+      ctx.beginPath();
+      ctx.moveTo(tongueBaseX, tongueBaseY);
+      ctx.quadraticCurveTo(
+        (tongueBaseX + tongueTipX) / 2 + tongueSwayX,
+        (tongueBaseY + tongueTipY) / 2 + tongueSwayY,
+        tongueTipX + tongueSwayX * 0.5,
+        tongueTipY + tongueSwayY * 0.5
+      );
+      ctx.lineWidth = maxWidth * 0.06;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = `rgba(255, 100, 130, ${opacity * 0.85})`;
+      ctx.stroke();
+
+      // 分岔
+      const tipX = tongueTipX + tongueSwayX * 0.5;
+      const tipY = tongueTipY + tongueSwayY * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(forkX1 + tongueSwayX * 0.3, forkY1 + tongueSwayY * 0.3);
+      ctx.lineWidth = maxWidth * 0.04;
+      ctx.strokeStyle = `rgba(255, 80, 120, ${opacity * 0.8})`;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(forkX2 + tongueSwayX * 0.3, forkY2 + tongueSwayY * 0.3);
+      ctx.lineWidth = maxWidth * 0.04;
+      ctx.strokeStyle = `rgba(255, 80, 120, ${opacity * 0.8})`;
+      ctx.stroke();
+
       // 眼睛（八字形、圓潤、會轉）
       const headColor = getColor(0);
       const eyeDist = maxWidth * 0.35;
