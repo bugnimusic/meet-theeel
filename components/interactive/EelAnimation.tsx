@@ -88,7 +88,7 @@ export default function EelAnimation() {
             grabOffsetX = dx;
             grabOffsetY = dy;
             eelGrabState[i] = { grabbed: true, targetX: mx, targetY: my, returnT: 0 };
-            canvas.style.cursor = "grabbing";
+            // cursor hidden;
             return;
           }
         }
@@ -110,7 +110,7 @@ export default function EelAnimation() {
         eelGrabState[grabbedEelIdx].grabbed = false;
         eelGrabState[grabbedEelIdx].returnT = 0;
         grabbedEelIdx = -1;
-        canvas.style.cursor = "default";
+        // cursor hidden;
       }
     };
 

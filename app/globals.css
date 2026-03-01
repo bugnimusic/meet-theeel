@@ -20,6 +20,7 @@
 body {
   background: var(--eel-dark);
   min-height: 100vh;
+  cursor: none;
 }
 
 /* 中文內容用明朝體 */
