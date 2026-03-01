@@ -330,6 +330,12 @@ export default function EelAnimation() {
       const pupilY = Math.sin(pupilAngle) * pupilOrbitR * 0.6;
       const pupilR = s * 0.42;
 
+      // 白色外圈（眼珠外推 0.1）
+      ctx.beginPath();
+      ctx.arc(pupilX, pupilY, pupilR * 1.1, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(235, 235, 230, ${opacity * 0.9})`;
+      ctx.fill();
+
       // 深藍眼珠
       ctx.beginPath();
       ctx.arc(pupilX, pupilY, pupilR, 0, Math.PI * 2);
