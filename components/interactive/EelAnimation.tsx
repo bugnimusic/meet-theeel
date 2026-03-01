@@ -120,11 +120,11 @@ export default function EelAnimation() {
     canvas.addEventListener("mouseleave", handleMouseUp);
 
     const eels: EelConfig[] = [
-      { speed: 0.5, amplitude: 120, frequency: 0.006, yOffset: 0.35, segments: 280, maxWidth: 56, opacity: 0.8, phase: 0, direction: 1 },
-      { speed: 0.65, amplitude: 90, frequency: 0.0075, yOffset: 0.55, segments: 220, maxWidth: 40, opacity: 0.6, phase: 2, direction: -1 },
-      { speed: 0.85, amplitude: 70, frequency: 0.01, yOffset: 0.25, segments: 160, maxWidth: 24, opacity: 0.45, phase: 1, direction: 1 },
-      { speed: 0.9, amplitude: 60, frequency: 0.011, yOffset: 0.65, segments: 140, maxWidth: 20, opacity: 0.35, phase: 4, direction: -1 },
-      { speed: 1.1, amplitude: 50, frequency: 0.0125, yOffset: 0.75, segments: 112, maxWidth: 16, opacity: 0.25, phase: 5.5, direction: 1 },
+      { speed: 0.5, amplitude: 120, frequency: 0.006, yOffset: 0.35, segments: 100, maxWidth: 56, opacity: 0.8, phase: 0, direction: 1 },
+      { speed: 0.65, amplitude: 90, frequency: 0.0075, yOffset: 0.55, segments: 80, maxWidth: 40, opacity: 0.6, phase: 2, direction: -1 },
+      { speed: 0.85, amplitude: 70, frequency: 0.01, yOffset: 0.25, segments: 60, maxWidth: 24, opacity: 0.45, phase: 1, direction: 1 },
+      { speed: 0.9, amplitude: 60, frequency: 0.011, yOffset: 0.65, segments: 50, maxWidth: 20, opacity: 0.35, phase: 4, direction: -1 },
+      { speed: 1.1, amplitude: 50, frequency: 0.0125, yOffset: 0.75, segments: 40, maxWidth: 16, opacity: 0.25, phase: 5.5, direction: 1 },
     ];
 
     // 儲存每條鰻魚的最新點（用於碰撞檢測）
@@ -161,7 +161,7 @@ export default function EelAnimation() {
       const points: { x: number; y: number }[] = [];
       for (let i = 0; i < segments; i++) {
         const t = i / segments;
-        const x = headX - i * 4 * direction;
+        const x = headX - i * 8 * direction;
         // 被抓住時：身體從滑鼠位置往下垂 + 瘋狂掙扎
         let y: number;
         if (isGrabbed) {
@@ -516,7 +516,7 @@ export default function EelAnimation() {
       eel: EelConfig
     ) => {
       // 烏蘇拉鰻魚風格：大片飄逸水草鰭
-      const finSpacing = 3; // 更密的鰭
+      const finSpacing = 5; // 效能優化
       
       for (let i = 2; i < points.length - 4; i += finSpacing) {
         const t = i / points.length;
