@@ -120,11 +120,11 @@ export default function EelAnimation() {
     canvas.addEventListener("mouseleave", handleMouseUp);
 
     const eels: EelConfig[] = [
-      { speed: 0.5, amplitude: 60, frequency: 0.012, yOffset: 0.35, segments: 140, maxWidth: 28, opacity: 0.8, phase: 0, direction: 1 },
-      { speed: 0.65, amplitude: 45, frequency: 0.015, yOffset: 0.55, segments: 110, maxWidth: 20, opacity: 0.6, phase: 2, direction: -1 },
-      { speed: 0.85, amplitude: 35, frequency: 0.02, yOffset: 0.25, segments: 80, maxWidth: 12, opacity: 0.45, phase: 1, direction: 1 },
-      { speed: 0.9, amplitude: 30, frequency: 0.022, yOffset: 0.65, segments: 70, maxWidth: 10, opacity: 0.35, phase: 4, direction: -1 },
-      { speed: 1.1, amplitude: 25, frequency: 0.025, yOffset: 0.75, segments: 56, maxWidth: 8, opacity: 0.25, phase: 5.5, direction: 1 },
+      { speed: 0.5, amplitude: 120, frequency: 0.006, yOffset: 0.35, segments: 280, maxWidth: 56, opacity: 0.8, phase: 0, direction: 1 },
+      { speed: 0.65, amplitude: 90, frequency: 0.0075, yOffset: 0.55, segments: 220, maxWidth: 40, opacity: 0.6, phase: 2, direction: -1 },
+      { speed: 0.85, amplitude: 70, frequency: 0.01, yOffset: 0.25, segments: 160, maxWidth: 24, opacity: 0.45, phase: 1, direction: 1 },
+      { speed: 0.9, amplitude: 60, frequency: 0.011, yOffset: 0.65, segments: 140, maxWidth: 20, opacity: 0.35, phase: 4, direction: -1 },
+      { speed: 1.1, amplitude: 50, frequency: 0.0125, yOffset: 0.75, segments: 112, maxWidth: 16, opacity: 0.25, phase: 5.5, direction: 1 },
     ];
 
     // 儲存每條鰻魚的最新點（用於碰撞檢測）
