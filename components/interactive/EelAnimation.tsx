@@ -146,17 +146,25 @@ export default function EelAnimation() {
           continue;
         }
 
-        // 泡泡外圈
+        // 泡泡外層發光
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(100, 180, 255, ${alpha * 0.15})`;
+        ctx.fill();
+
+        // 泡泡主體（更亮）
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(150, 220, 255, ${alpha * 0.6})`;
-        ctx.lineWidth = 0.5;
+        ctx.fillStyle = `rgba(150, 210, 255, ${alpha * 0.3})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(180, 230, 255, ${alpha * 0.7})`;
+        ctx.lineWidth = 0.8;
         ctx.stroke();
 
-        // 泡泡高光
+        // 泡泡高光（更亮更大）
         ctx.beginPath();
-        ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 240, 255, ${alpha * 0.4})`;
+        ctx.arc(b.x - b.radius * 0.25, b.y - b.radius * 0.25, b.radius * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(220, 245, 255, ${alpha * 0.6})`;
         ctx.fill();
       }
 
@@ -315,52 +323,39 @@ export default function EelAnimation() {
       ctx.fillStyle = `rgba(${Math.max(0, bodyColor.r - 30)}, ${Math.max(0, bodyColor.g - 20)}, ${Math.max(0, bodyColor.b - 20)}, ${opacity * 0.7})`;
       ctx.fill();
 
-      // 白眼球（縮小 0.3 倍）
-      const eyeS = s * 0.7;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, eyeS, eyeS * 0.65, 0, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(235, 235, 230, ${opacity * 0.92})`;
-      ctx.fill();
-
-      // 眼珠轉圈（放大 0.2 倍）
-      const pupilOrbitR = eyeS * 0.2;
+      // 無白眼球，直接畫藍色眼珠 + 黑瞳孔
+      const pupilOrbitR = s * 0.15;
       const pupilAngle = time * 0.8;
       const pupilX = Math.cos(pupilAngle) * pupilOrbitR;
       const pupilY = Math.sin(pupilAngle) * pupilOrbitR * 0.6;
-      const pupilR = s * 0.38;
+      const pupilR = s * 0.42;
 
-      // 深藍虹膜
+      // 深藍眼珠
       ctx.beginPath();
       ctx.arc(pupilX, pupilY, pupilR, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(15, 25, 90, ${opacity * 0.95})`;
+      ctx.fillStyle = `rgba(20, 35, 110, ${opacity * 0.95})`;
       ctx.fill();
 
-      // 虹膜紋路（放射狀細線）
+      // 虹膜紋路
       for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
         ctx.beginPath();
         ctx.moveTo(pupilX + Math.cos(a) * pupilR * 0.3, pupilY + Math.sin(a) * pupilR * 0.3);
         ctx.lineTo(pupilX + Math.cos(a) * pupilR * 0.85, pupilY + Math.sin(a) * pupilR * 0.85);
         ctx.lineWidth = 0.5;
-        ctx.strokeStyle = `rgba(30, 50, 130, ${opacity * 0.4})`;
+        ctx.strokeStyle = `rgba(40, 60, 150, ${opacity * 0.4})`;
         ctx.stroke();
       }
 
-      // 瞳孔
+      // 黑瞳孔
       ctx.beginPath();
-      ctx.arc(pupilX, pupilY, pupilR * 0.4, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(3, 5, 25, ${opacity * 0.95})`;
+      ctx.arc(pupilX, pupilY, pupilR * 0.45, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(3, 5, 20, ${opacity * 0.95})`;
       ctx.fill();
 
-      // 高光（跟著眼珠轉）
+      // 高光
       ctx.beginPath();
-      ctx.arc(pupilX - pupilR * 0.25, pupilY - pupilR * 0.25, pupilR * 0.15, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.8})`;
-      ctx.fill();
-
-      // 第二高光（小的）
-      ctx.beginPath();
-      ctx.arc(pupilX + pupilR * 0.2, pupilY + pupilR * 0.15, pupilR * 0.08, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.5})`;
+      ctx.arc(pupilX - pupilR * 0.25, pupilY - pupilR * 0.25, pupilR * 0.13, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.75})`;
       ctx.fill();
 
       ctx.restore();
@@ -431,31 +426,7 @@ export default function EelAnimation() {
         ctx.strokeStyle = `rgba(220, 230, 255, ${finAlpha})`;
         ctx.stroke();
 
-        // 鰭的半透明填充面（水草飄的感覺）
-        if (i % (finSpacing * 2) === 2 && finScale > 0.3) {
-          const nextI = Math.min(i + finSpacing * 2, points.length - 1);
-          const pN = points[nextI];
-          const bodyWN = getBodyWidth(nextI / points.length, maxWidth);
-          const baseUpX2 = pN.x + nx * bodyWN * 0.35;
-          const baseUpY2 = pN.y + ny * bodyWN * 0.35;
-
-          ctx.beginPath();
-          ctx.moveTo(baseUpX, baseUpY);
-          ctx.bezierCurveTo(
-            baseUpX + nx * finLength * 0.5 + dx * cpWave / len,
-            baseUpY + ny * finLength * 0.5 + dy * cpWave / len,
-            baseUpX + nx * finLength * 0.8,
-            baseUpY + ny * finLength * 0.8,
-            baseUpX + nx * finLength,
-            baseUpY + ny * finLength
-          );
-          ctx.lineTo(baseUpX2, baseUpY2);
-          ctx.closePath();
-          ctx.fillStyle = `rgba(200, 215, 255, ${finAlpha * 0.25})`;
-          ctx.fill();
-        }
-
-        // 下鰭（對稱但相位不同）
+        // 下鰭基準點（先定義，薄膜要用）
         const baseDownX = p.x - nx * bodyW * 0.35;
         const baseDownY = p.y - ny * bodyW * 0.35;
         const cpWave2 = Math.sin(time * 2.2 + i * 0.22 + eel.phase + 1.5) * finLength * 0.5;
@@ -474,6 +445,63 @@ export default function EelAnimation() {
         ctx.lineWidth = Math.max(1, 3 * finScale * (1 - t * 0.5));
         ctx.strokeStyle = `rgba(220, 230, 255, ${finAlpha * 0.8})`;
         ctx.stroke();
+
+        // 透明薄膜連結相鄰鰭
+        if (i + finSpacing < points.length - 4) {
+          const nextI = Math.min(i + finSpacing, points.length - 1);
+          const pN = points[nextI];
+          const pNNext = points[Math.min(nextI + 3, points.length - 1)];
+          const ndx = pNNext.x - pN.x;
+          const ndy = pNNext.y - pN.y;
+          const nlen = Math.sqrt(ndx * ndx + ndy * ndy) || 1;
+          const nnx = -ndy / nlen;
+          const nny = ndx / nlen;
+
+          const tN = nextI / points.length;
+          const bodyWN = getBodyWidth(tN, maxWidth);
+          let finScaleN: number;
+          if (tN < 0.1) finScaleN = tN * 8;
+          else if (tN < 0.5) finScaleN = 1;
+          else finScaleN = Math.max(0, 1 - (tN - 0.5) * 1.5);
+
+          const wave1N = Math.sin(time * 2.5 + nextI * 0.15 + eel.phase) * 0.7;
+          const wave2N = Math.sin(time * 1.8 + nextI * 0.25 + eel.phase * 1.5) * 0.4;
+          const finLenN = bodyWN * (0.8 + (wave1N + wave2N) * 0.4) * finScaleN;
+
+          // 上鰭薄膜
+          const baseUpX2 = pN.x + nnx * bodyWN * 0.35;
+          const baseUpY2 = pN.y + nny * bodyWN * 0.35;
+          const tipUpX1 = baseUpX + nx * finLength;
+          const tipUpY1 = baseUpY + ny * finLength;
+          const tipUpX2 = baseUpX2 + nnx * finLenN;
+          const tipUpY2 = baseUpY2 + nny * finLenN;
+
+          ctx.beginPath();
+          ctx.moveTo(baseUpX, baseUpY);
+          ctx.lineTo(tipUpX1, tipUpY1);
+          ctx.lineTo(tipUpX2, tipUpY2);
+          ctx.lineTo(baseUpX2, baseUpY2);
+          ctx.closePath();
+          ctx.fillStyle = `rgba(190, 210, 255, ${finAlpha * 0.12})`;
+          ctx.fill();
+
+          // 下鰭薄膜
+          const baseDownX2 = pN.x - nnx * bodyWN * 0.35;
+          const baseDownY2 = pN.y - nny * bodyWN * 0.35;
+          const tipDownX1 = baseDownX - nx * finLength;
+          const tipDownY1 = baseDownY - ny * finLength;
+          const tipDownX2 = baseDownX2 - nnx * finLenN;
+          const tipDownY2 = baseDownY2 - nny * finLenN;
+
+          ctx.beginPath();
+          ctx.moveTo(baseDownX, baseDownY);
+          ctx.lineTo(tipDownX1, tipDownY1);
+          ctx.lineTo(tipDownX2, tipDownY2);
+          ctx.lineTo(baseDownX2, baseDownY2);
+          ctx.closePath();
+          ctx.fillStyle = `rgba(190, 210, 255, ${finAlpha * 0.08})`;
+          ctx.fill();
+        }
       }
     };
 
