@@ -881,11 +881,13 @@ export default function EelAnimation() {
       const h = H();
       ctx.clearRect(0, 0, w, h);
       time += 0.016;
-      // 在 rAF 裡讀 scroll（跟渲染同步，不會造成 jank）
+      // 在 rAF 裡讀 scroll
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       scrollProgressTarget = docH > 0 ? window.scrollY / docH : 0;
-      // 平滑 scroll（lerp 係數 0.1 = 絲滑過渡）
-      scrollProgress += (scrollProgressTarget - scrollProgress) * 0.1;
+      // 快速跟上，幾乎即時但不會跳
+      const diff = Math.abs(scrollProgressTarget - scrollProgress);
+      const lerpSpeed = diff > 0.05 ? 0.4 : 0.15; // 大幅滾動時更快跟上
+      scrollProgress += (scrollProgressTarget - scrollProgress) * lerpSpeed;
 
       // Section-specific particles（背景層）
       spawnSectionParticles(w, h);
