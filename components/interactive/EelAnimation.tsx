@@ -885,8 +885,8 @@ export default function EelAnimation() {
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       scrollProgressTarget = docH > 0 ? window.scrollY / docH : 0;
       if (isMobile) {
-        // 手機：直接跟上（iOS Safari 會暫停 rAF，lerp 會卡）
-        scrollProgress = scrollProgressTarget;
+        // 手機：固定往下游，不跟 scroll 變化
+        scrollProgress = 1;
       } else {
         // 桌面：平滑過渡
         const diff = Math.abs(scrollProgressTarget - scrollProgress);
