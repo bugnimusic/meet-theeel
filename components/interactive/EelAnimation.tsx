@@ -45,8 +45,20 @@ export default function EelAnimation() {
 
     let animationId: number;
     let time = 0;
+    let scrollProgress = 0; // 0 = top, 1 = bottom
     const bubbles: Bubble[] = [];
     const ripples: Ripple[] = [];
+    // Section-specific particles
+    const eggs: { x: number; y: number; size: number; wobble: number; opacity: number; vy: number }[] = [];
+    const scales: { x: number; y: number; size: number; angle: number; opacity: number; vy: number; vx: number; rot: number }[] = [];
+    const vortexParticles: { angle: number; radius: number; speed: number; size: number; opacity: number }[] = [];
+
+    const updateScroll = () => {
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgress = docH > 0 ? window.scrollY / docH : 0;
+    };
+    updateScroll();
+    window.addEventListener("scroll", updateScroll, { passive: true });
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 1.5);
@@ -136,12 +148,24 @@ export default function EelAnimation() {
 
     const getPoints = (w: number, h: number, eel: EelConfig, time: number, eelIdx?: number) => {
       const { speed, amplitude, frequency, yOffset, segments, phase, direction } = eel;
+      const totalLen = segments * 8;
+      
+      // scrollProgress 控制游泳方向：0 = 水平游，1 = 完全往下潛
+      const verticalMix = Math.min(1, scrollProgress * 2.5); // 快速過渡到垂直
+      
+      // 水平模式的頭部位置
       const centerY = h * yOffset;
-      const totalLen = segments * 4;
-      let headX = direction > 0
+      const horizHeadX = direction > 0
         ? ((time * speed * 80 + phase * 200) % (w + totalLen)) - totalLen * 0.3
         : w + totalLen * 0.3 - ((time * speed * 80 + phase * 200) % (w + totalLen));
-      let headY = centerY;
+      
+      // 垂直模式的頭部位置（往下游）
+      const centerX = w * (0.15 + yOffset * 0.7); // 用 yOffset 當 xOffset
+      const vertHeadY = ((time * speed * 60 + phase * 200) % (h + totalLen)) - totalLen * 0.3;
+      
+      // 混合水平和垂直
+      let headX = horizHeadX * (1 - verticalMix) + centerX * verticalMix;
+      let headY = centerY * (1 - verticalMix) + vertHeadY * verticalMix;
 
       // 如果被抓住，頭部跟著滑鼠
       const gs = eelIdx !== undefined ? eelGrabState[eelIdx] : undefined;
@@ -149,10 +173,9 @@ export default function EelAnimation() {
         headX = gs.targetX + grabOffsetX;
         headY = gs.targetY + grabOffsetY;
       } else if (gs && !gs.grabbed && gs.returnT < 1) {
-        // 放開後平滑回歸
         gs.returnT = Math.min(1, gs.returnT + 0.02);
         const t = gs.returnT;
-        const ease = t * t * (3 - 2 * t); // smoothstep
+        const ease = t * t * (3 - 2 * t);
         headX = gs.targetX * (1 - ease) + headX * ease;
         headY = gs.targetY * (1 - ease) + headY * ease;
       }
@@ -161,19 +184,29 @@ export default function EelAnimation() {
       const points: { x: number; y: number }[] = [];
       for (let i = 0; i < segments; i++) {
         const t = i / segments;
-        const x = headX - i * 8 * direction;
-        // 被抓住時：身體從滑鼠位置往下垂 + 瘋狂掙扎
-        let y: number;
+        
         if (isGrabbed) {
+          const x = headX - i * 8 * direction;
           const struggle = Math.sin(time * 15 + i * 0.3) * amplitude * 0.6 * t;
-          const droop = t * t * 40; // 身體往下垂
-          y = headY + struggle + droop;
+          const droop = t * t * 40;
+          points.push({ x, y: headY + struggle + droop });
         } else {
-          const baseY = (gs && gs.returnT < 1) ? headY : centerY;
-          const waveAmp = amplitude * (0.2 + t * 0.8);
-          y = baseY + Math.sin((x * frequency * direction) + (time * speed * 3) + phase) * waveAmp;
+          // 水平游的座標
+          const hx = headX - i * 8 * direction;
+          const baseYH = (gs && gs.returnT < 1) ? headY : centerY;
+          const waveAmpH = amplitude * (0.2 + t * 0.8);
+          const hy = baseYH + Math.sin((hx * frequency * direction) + (time * speed * 3) + phase) * waveAmpH;
+          
+          // 垂直游的座標（往下，左右擺動）
+          const vy = headY - i * 8; // 身體在頭的上方（因為往下游）
+          const waveAmpV = amplitude * (0.2 + t * 0.8);
+          const vx = centerX + Math.sin((vy * frequency) + (time * speed * 3) + phase) * waveAmpV;
+          
+          // 混合
+          const x = hx * (1 - verticalMix) + vx * verticalMix;
+          const y = hy * (1 - verticalMix) + vy * verticalMix;
+          points.push({ x, y });
         }
-        points.push({ x, y });
       }
       return points;
     };
@@ -306,12 +339,14 @@ export default function EelAnimation() {
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      // 顏色漸層函數：頭部偏藍 → 尾部偏粉紫
+      // 顏色漸層函數：頭部偏藍 → 尾部偏粉紫，隨深度變深
+      const depthDarken = scrollProgress * 0.5; // 越深顏色越暗
       const getColor = (t: number) => {
         // 頭：(80, 50, 200) 深藍紫 → 尾：(200, 120, 240) 粉紫
-        const r = Math.round(80 + t * 120);
-        const g = Math.round(50 + t * 70);
-        const b = Math.round(200 + t * 40);
+        // 深度：越深越偏向深靛藍
+        const r = Math.round((80 + t * 120) * (1 - depthDarken * 0.6));
+        const g = Math.round((50 + t * 70) * (1 - depthDarken * 0.4));
+        const b = Math.round(Math.min(255, (200 + t * 40) * (1 - depthDarken * 0.15)));
         return { r, g, b };
       };
 
@@ -731,11 +766,125 @@ export default function EelAnimation() {
       }
     };
 
+    // Section-specific particles
+    const spawnSectionParticles = (w: number, h: number) => {
+      // 產卵區 (scrollProgress ~0.5-0.65): 漂浮的蛋
+      if (scrollProgress > 0.4 && scrollProgress < 0.7 && Math.random() < 0.08) {
+        eggs.push({
+          x: Math.random() * w,
+          y: h + 10,
+          size: 4 + Math.random() * 8,
+          wobble: Math.random() * Math.PI * 2,
+          opacity: 0.3 + Math.random() * 0.4,
+          vy: -(0.3 + Math.random() * 0.5),
+        });
+      }
+      // 蛻皮區 (scrollProgress ~0.65-0.8): 飄落的鱗片
+      if (scrollProgress > 0.55 && scrollProgress < 0.85 && Math.random() < 0.06) {
+        scales.push({
+          x: Math.random() * w,
+          y: -10,
+          size: 3 + Math.random() * 5,
+          angle: Math.random() * Math.PI * 2,
+          opacity: 0.2 + Math.random() * 0.3,
+          vy: 0.5 + Math.random() * 0.8,
+          vx: (Math.random() - 0.5) * 0.5,
+          rot: (Math.random() - 0.5) * 0.05,
+        });
+      }
+      // 轉圈區 (scrollProgress ~0.8-1.0): 漩渦粒子
+      if (scrollProgress > 0.75 && vortexParticles.length < 30 && Math.random() < 0.1) {
+        vortexParticles.push({
+          angle: Math.random() * Math.PI * 2,
+          radius: 50 + Math.random() * 150,
+          speed: 0.005 + Math.random() * 0.015,
+          size: 1 + Math.random() * 3,
+          opacity: 0.15 + Math.random() * 0.25,
+        });
+      }
+    };
+
+    const drawSectionParticles = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+      // 蛋 🥚
+      for (let i = eggs.length - 1; i >= 0; i--) {
+        const e = eggs[i];
+        e.y += e.vy;
+        e.wobble += 0.03;
+        e.x += Math.sin(e.wobble) * 0.3;
+        e.opacity -= 0.002;
+        if (e.y < -20 || e.opacity <= 0) { eggs.splice(i, 1); continue; }
+        // 蛋形（橢圓）
+        ctx.beginPath();
+        ctx.ellipse(e.x, e.y, e.size * 0.7, e.size, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 220, 150, ${e.opacity * 0.3})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255, 200, 100, ${e.opacity * 0.5})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        // 光澤
+        ctx.beginPath();
+        ctx.ellipse(e.x - e.size * 0.2, e.y - e.size * 0.3, e.size * 0.2, e.size * 0.15, -0.3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 220, ${e.opacity * 0.4})`;
+        ctx.fill();
+      }
+      while (eggs.length > 40) eggs.shift();
+
+      // 鱗片 🐍
+      for (let i = scales.length - 1; i >= 0; i--) {
+        const s = scales[i];
+        s.y += s.vy;
+        s.x += s.vx;
+        s.angle += s.rot;
+        s.opacity -= 0.002;
+        if (s.y > h + 20 || s.opacity <= 0) { scales.splice(i, 1); continue; }
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.angle);
+        // 菱形鱗片
+        ctx.beginPath();
+        ctx.moveTo(0, -s.size);
+        ctx.lineTo(s.size * 0.6, 0);
+        ctx.lineTo(0, s.size);
+        ctx.lineTo(-s.size * 0.6, 0);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(160, 140, 220, ${s.opacity * 0.4})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(200, 180, 255, ${s.opacity * 0.3})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        ctx.restore();
+      }
+      while (scales.length > 40) scales.shift();
+
+      // 漩渦 🔄
+      if (scrollProgress > 0.75) {
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        for (let i = vortexParticles.length - 1; i >= 0; i--) {
+          const v = vortexParticles[i];
+          v.angle += v.speed;
+          v.radius -= 0.1; // 慢慢往中心靠
+          v.opacity -= 0.001;
+          if (v.radius < 5 || v.opacity <= 0) { vortexParticles.splice(i, 1); continue; }
+          const vx = cx + Math.cos(v.angle) * v.radius;
+          const vy = cy + Math.sin(v.angle) * v.radius;
+          ctx.beginPath();
+          ctx.arc(vx, vy, v.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(100, 220, 220, ${v.opacity * (scrollProgress - 0.75) * 4})`;
+          ctx.fill();
+        }
+      }
+    };
+
     const draw = () => {
       const w = W();
       const h = H();
       ctx.clearRect(0, 0, w, h);
       time += 0.016;
+
+      // Section-specific particles（背景層）
+      spawnSectionParticles(w, h);
+      drawSectionParticles(ctx, w, h);
 
       // 先畫小的再畫大的
       for (let i = eels.length - 1; i >= 0; i--) {
@@ -754,6 +903,7 @@ export default function EelAnimation() {
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", updateScroll);
     };
   }, []);
 

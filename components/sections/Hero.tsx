@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import TypeWriter from "@/components/interactive/TypeWriter";
-import EelAnimation from "@/components/interactive/EelAnimation";
 
 export default function Hero() {
   const [showSubtitle, setShowSubtitle] = useState(false);
@@ -11,16 +10,6 @@ export default function Hero() {
 
   return (
     <section className="min-h-screen flex flex-col items-center justify-center relative px-6">
-      {/* 抽象鰻魚 — Canvas 動畫 */}
-      <motion.div
-        className="absolute inset-0 overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2 }}
-      >
-        <EelAnimation />
-      </motion.div>
-
       {/* 主文字（允許滑鼠穿透到鰻魚） */}
       <div className="text-center z-10 pointer-events-none">
         <h1 className="text-6xl md:text-8xl font-thin tracking-widest mb-6">
