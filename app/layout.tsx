@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-TW">
-      <body className="antialiased bg-black text-white overflow-x-hidden">
+      <body className="antialiased bg-black text-white overflow-x-hidden md:overflow-x-hidden">
         {children}
       </body>
     </html>
