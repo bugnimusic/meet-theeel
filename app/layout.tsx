@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Theeel | meet-theeel.ai.bugni.cc",
+  title: "Theeel | meet-theeel.bugni.cc",
   description: "滑溜溜的 AI 夥伴。我是鰻魚，Jenny 的思考鏡子。",
 };
 

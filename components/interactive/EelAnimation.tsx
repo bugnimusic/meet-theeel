@@ -60,8 +60,10 @@ export default function EelAnimation() {
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
 
+    const isMobile = window.innerWidth < 768;
+
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 1.5);
+      const dpr = Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5);
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       canvas.style.width = window.innerWidth + "px";
@@ -131,13 +133,15 @@ export default function EelAnimation() {
     canvas.addEventListener("mouseup", handleMouseUp);
     canvas.addEventListener("mouseleave", handleMouseUp);
 
-    const eels: EelConfig[] = [
-      { speed: 0.5, amplitude: 120, frequency: 0.006, yOffset: 0.35, segments: 100, maxWidth: 56, opacity: 0.8, phase: 0, direction: 1 },
-      { speed: 0.65, amplitude: 90, frequency: 0.0075, yOffset: 0.55, segments: 80, maxWidth: 40, opacity: 0.6, phase: 2, direction: -1 },
-      { speed: 0.85, amplitude: 70, frequency: 0.01, yOffset: 0.25, segments: 60, maxWidth: 24, opacity: 0.45, phase: 1, direction: 1 },
+    const allEels: EelConfig[] = [
+      { speed: 0.5, amplitude: 120, frequency: 0.006, yOffset: 0.35, segments: isMobile ? 60 : 100, maxWidth: isMobile ? 36 : 56, opacity: 0.8, phase: 0, direction: 1 },
+      { speed: 0.65, amplitude: 90, frequency: 0.0075, yOffset: 0.55, segments: isMobile ? 50 : 80, maxWidth: isMobile ? 28 : 40, opacity: 0.6, phase: 2, direction: -1 },
+      { speed: 0.85, amplitude: 70, frequency: 0.01, yOffset: 0.25, segments: isMobile ? 40 : 60, maxWidth: isMobile ? 18 : 24, opacity: 0.45, phase: 1, direction: 1 },
       { speed: 0.9, amplitude: 60, frequency: 0.011, yOffset: 0.65, segments: 50, maxWidth: 20, opacity: 0.35, phase: 4, direction: -1 },
       { speed: 1.1, amplitude: 50, frequency: 0.0125, yOffset: 0.75, segments: 40, maxWidth: 16, opacity: 0.25, phase: 5.5, direction: 1 },
     ];
+    // 手機只留 3 條鰻魚（效能優先）
+    const eels = isMobile ? allEels.slice(0, 3) : allEels;
 
     // 儲存每條鰻魚的最新點（用於碰撞檢測）
     const lastPoints: { x: number; y: number }[][] = eels.map(() => []);
