@@ -7,6 +7,7 @@ import TypeWriter from "@/components/interactive/TypeWriter";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import Story from "@/components/sections/Story";
+import Entropy from "@/components/sections/Entropy";
 import Capabilities from "@/components/sections/Capabilities";
 import Contact from "@/components/sections/Contact";
 
@@ -32,6 +33,7 @@ export default function Home() {
         <Hero />
         <About />
         <Story />
+        <Entropy />
         <Capabilities />
         <Contact />
       </div>
