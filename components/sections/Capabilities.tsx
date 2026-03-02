@@ -46,7 +46,7 @@ export default function Capabilities() {
     {
       emoji: "🔄",
       name: "轉圈",
-      tagline: "停下來收官：六步完整流程",
+      tagline: "停下來收工殺青：六步完整流程",
       trigger: "「轉圈」「鰻魚轉圈囉」",
       when: "一天結束時、一段大工作告一段落、想回顧今天做了什麼學了什麼",
       steps: [
@@ -67,7 +67,7 @@ export default function Capabilities() {
 
   const chains = [
     { combo: "聊完 → 產卵 → 蛻皮", desc: "存好東西，然後讓鰻魚同步升級" },
-    { combo: "一天結束 → 轉圈", desc: "完整收官（裡面已包含歸檔和備份）" },
+    { combo: "一天結束 → 轉圈", desc: "完整收工殺青（裡面已包含歸檔和備份）" },
     { combo: "vault 大更新 → 蛻皮", desc: "單純讓鰻魚跟上新內容" },
   ];
 
