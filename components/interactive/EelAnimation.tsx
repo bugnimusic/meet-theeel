@@ -45,7 +45,8 @@ export default function EelAnimation() {
 
     let animationId: number;
     let time = 0;
-    let scrollProgress = 0; // 0 = top, 1 = bottom
+    let scrollProgressTarget = 0; // 目標值（raw scroll）
+    let scrollProgress = 0; // 平滑後的值（用於渲染）
     const bubbles: Bubble[] = [];
     const ripples: Ripple[] = [];
     // Section-specific particles
@@ -55,7 +56,7 @@ export default function EelAnimation() {
 
     const updateScroll = () => {
       const docH = document.documentElement.scrollHeight - window.innerHeight;
-      scrollProgress = docH > 0 ? window.scrollY / docH : 0;
+      scrollProgressTarget = docH > 0 ? window.scrollY / docH : 0;
     };
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
@@ -885,6 +886,8 @@ export default function EelAnimation() {
       const h = H();
       ctx.clearRect(0, 0, w, h);
       time += 0.016;
+      // 平滑 scroll（lerp 係數 0.08 = 絲滑過渡）
+      scrollProgress += (scrollProgressTarget - scrollProgress) * 0.08;
 
       // Section-specific particles（背景層）
       spawnSectionParticles(w, h);
