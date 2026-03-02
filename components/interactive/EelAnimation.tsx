@@ -54,12 +54,7 @@ export default function EelAnimation() {
     const scales: { x: number; y: number; size: number; angle: number; opacity: number; vy: number; vx: number; rot: number }[] = [];
     const vortexParticles: { angle: number; radius: number; speed: number; size: number; opacity: number }[] = [];
 
-    const updateScroll = () => {
-      const docH = document.documentElement.scrollHeight - window.innerHeight;
-      scrollProgressTarget = docH > 0 ? window.scrollY / docH : 0;
-    };
-    updateScroll();
-    window.addEventListener("scroll", updateScroll, { passive: true });
+    // scrollProgressTarget 在 draw loop 裡更新，不用 scroll listener（避免 layout thrashing）
 
     const isMobile = window.innerWidth < 768;
 
@@ -886,8 +881,11 @@ export default function EelAnimation() {
       const h = H();
       ctx.clearRect(0, 0, w, h);
       time += 0.016;
-      // 平滑 scroll（lerp 係數 0.08 = 絲滑過渡）
-      scrollProgress += (scrollProgressTarget - scrollProgress) * 0.08;
+      // 在 rAF 裡讀 scroll（跟渲染同步，不會造成 jank）
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgressTarget = docH > 0 ? window.scrollY / docH : 0;
+      // 平滑 scroll（lerp 係數 0.1 = 絲滑過渡）
+      scrollProgress += (scrollProgressTarget - scrollProgress) * 0.1;
 
       // Section-specific particles（背景層）
       spawnSectionParticles(w, h);
@@ -910,7 +908,7 @@ export default function EelAnimation() {
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("scroll", updateScroll);
+      // scroll 不再用 listener
     };
   }, []);
 
@@ -918,7 +916,7 @@ export default function EelAnimation() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0"
-      style={{ opacity: 0.9 }}
+      style={{ opacity: 0.9, willChange: "transform" }}
     />
   );
 }
