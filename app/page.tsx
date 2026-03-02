@@ -20,39 +20,33 @@ export default function Home() {
   const lastSectionRef = useRef(0);
   const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 手機版：偵測 section 切換，觸發鰻魚旋轉
+  // 手機版：滾動時觸發鰻魚旋轉
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = Number(entry.target.getAttribute("data-section-idx"));
-            if (idx !== lastSectionRef.current) {
-              const direction = idx > lastSectionRef.current ? 1 : -1;
-              lastSectionRef.current = idx;
+    let isRotating = false;
+    let lastScrollY = window.scrollY;
 
-              // 旋轉 30 度
-              setEelRotation(direction * 30);
+    const handleScroll = () => {
+      if (isRotating) return;
+      const currentScrollY = window.scrollY;
+      const direction = currentScrollY > lastScrollY ? 1 : -1;
+      lastScrollY = currentScrollY;
+      isRotating = true;
 
-              // 0.4 秒後轉回來
-              if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
-              rotationTimeoutRef.current = setTimeout(() => {
-                setEelRotation(0);
-              }, 400);
-            }
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
+      setEelRotation(direction * 30);
 
-    document.querySelectorAll(".snap-section").forEach((el) => observer.observe(el));
+      if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
+      rotationTimeoutRef.current = setTimeout(() => {
+        setEelRotation(0);
+        setTimeout(() => { isRotating = false; }, 300);
+      }, 350);
+    };
 
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
-      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
       if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
     };
   }, []);
