@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import MouseTrail from "@/components/interactive/MouseTrail";
 import TypeWriter from "@/components/interactive/TypeWriter";
 import EelAnimation from "@/components/interactive/EelAnimation";
-import EelMobileCSS from "@/components/interactive/EelMobileCSS";
+
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import Story from "@/components/sections/Story";
@@ -21,12 +21,9 @@ export default function Home() {
     <main className="relative">
       <MouseTrail />
       
-      {/* 鰻魚全站背景：桌面 Canvas / 手機 CSS */}
-      <div className="fixed inset-0 z-0 hidden md:block">
+      {/* 鰻魚全站背景 Canvas */}
+      <div className="fixed inset-0 z-0">
         <EelAnimation />
-      </div>
-      <div className="md:hidden">
-        <EelMobileCSS />
       </div>
 
       {/* 背景漸層光效 */}

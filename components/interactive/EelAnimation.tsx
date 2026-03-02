@@ -45,6 +45,7 @@ export default function EelAnimation() {
 
     let animationId: number;
     let time = 0;
+    let lastFrameTime = performance.now();
     let scrollProgressTarget = 0; // 目標值（raw scroll）
     let scrollProgress = 0; // 平滑後的值（用於渲染）
     const bubbles: Bubble[] = [];
@@ -880,13 +881,18 @@ export default function EelAnimation() {
       const w = W();
       const h = H();
       ctx.clearRect(0, 0, w, h);
-      time += 0.016;
+      // 用實際時間差，rAF 被暫停後恢復不會跳幀
+      const now = performance.now();
+      const dt = Math.min((now - lastFrameTime) / 1000, 0.05); // cap 50ms 防大跳
+      lastFrameTime = now;
+      time += dt;
       // 在 rAF 裡讀 scroll
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       scrollProgressTarget = docH > 0 ? window.scrollY / docH : 0;
       if (isMobile) {
-        // 手機：固定往下游，不跟 scroll 變化
-        scrollProgress = 1;
+        // 手機：完全不跟 scroll，鰻魚自由游（避免 iOS rAF 暫停造成的跳轉）
+        scrollProgress = 0;
+        scrollProgressTarget = 0;
       } else {
         // 桌面：平滑過渡
         const diff = Math.abs(scrollProgressTarget - scrollProgress);
