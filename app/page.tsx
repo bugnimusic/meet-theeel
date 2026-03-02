@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import MouseTrail from "@/components/interactive/MouseTrail";
 import TypeWriter from "@/components/interactive/TypeWriter";
@@ -16,37 +16,45 @@ import Contact from "@/components/sections/Contact";
 export default function Home() {
   const { scrollYProgress } = useScroll();
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const [eelRotation, setEelRotation] = useState(0);
-  const lastSectionRef = useRef(0);
+  const eelContainerRef = useRef<HTMLDivElement>(null);
   const rotationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 手機版：滾動時觸發鰻魚旋轉
+  // 手機版：touchstart 直接改 DOM，完全不等 React re-render
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
 
-    let isRotating = false;
-    let lastScrollY = window.scrollY;
+    let touchStartY = 0;
 
-    const handleScroll = () => {
-      if (isRotating) return;
-      const currentScrollY = window.scrollY;
-      const direction = currentScrollY > lastScrollY ? 1 : -1;
-      lastScrollY = currentScrollY;
-      isRotating = true;
-
-      setEelRotation(direction * 30);
-
-      if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
-      rotationTimeoutRef.current = setTimeout(() => {
-        setEelRotation(0);
-        setTimeout(() => { isRotating = false; }, 300);
-      }, 350);
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const handleTouchMove = (e: TouchEvent) => {
+      const el = eelContainerRef.current;
+      if (!el) return;
+      const dy = touchStartY - e.touches[0].clientY;
+      const direction = dy > 0 ? 1 : -1;
+      // 直接改 DOM style，零延遲
+      el.style.transform = `rotate(${direction * 28}deg)`;
+      el.style.transition = "transform 0.15s ease-out";
+    };
+
+    const handleTouchEnd = () => {
+      const el = eelContainerRef.current;
+      if (!el) return;
+      el.style.transition = "transform 0.35s cubic-bezier(0.22,1,0.36,1)";
+      el.style.transform = "rotate(0deg)";
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
       if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
     };
   }, []);
@@ -57,12 +65,9 @@ export default function Home() {
       
       {/* 鰻魚全站背景 Canvas — 手機版會旋轉過場 */}
       <div
+        ref={eelContainerRef}
         className="fixed inset-0 z-0"
-        style={{
-          transform: `rotate(${eelRotation}deg)`,
-          transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
-          transformOrigin: "center center",
-        }}
+        style={{ transformOrigin: "center center" }}
       >
         <EelAnimation />
       </div>
